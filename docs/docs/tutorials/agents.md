@@ -361,7 +361,7 @@ EveningPlannerAgent eveningPlannerAgent = AgenticServices
 List<EveningPlan> plans = eveningPlannerAgent.plan("romantic");
 ```
 
-Here the `output` function of the `AgenticScope` defined in the `EveningPlannerAgent` allows to assemble the outputs of the two subagents, creating a list of `EveningPlan` objects that combine a movie and a meal matching the given mood. The `output` method, even if especially relevant for parallel workflows, can be actually used in any workflow pattern to define how to combine the outputs of the subagents into a single result, instead of simply returning a value from the `AgenticScope`. The `executor` method also allows to optionally provide an `Executor` that will be used to execute the subagents in parallel, otherwise an internal cached thread pool will be used by default.
+Here the `output` function of the `AgenticScope` defined in the `EveningPlannerAgent` allows you to assemble the outputs of the two subagents, creating a list of `EveningPlan` objects that combine a movie and a meal matching the given mood. The `output` method, even if especially relevant for parallel workflows, can be actually used in any workflow pattern to define how to combine the outputs of the subagents into a single result, instead of simply returning a value from the `AgenticScope`. The `executor` method also allows you to optionally provide an `Executor` that will be used to execute the subagents in parallel, otherwise an internal cached thread pool will be used by default.
 
 ### Parallel mapper workflow
 
@@ -698,7 +698,7 @@ The same dynamic selection is also possible for the `streamingChatModel` method.
 
 In a complex agentic system, many things can go wrong, such as an agent failing to produce a result, an external tool not being available, or an unexpected error occurring during the execution of an agent.
 
-For this reason, the `errorHandler` method allows to provide the agentic system with an error handler that is a function transforming an `ErrorContext` defined as
+For this reason, the `errorHandler` method allows you to provide the agentic system with an error handler that is a function transforming an `ErrorContext` defined as
 
 ```java
 record ErrorContext(String agentName, AgenticScope agenticScope, AgentInvocationException exception) { }
@@ -753,7 +753,7 @@ UntypedAgent novelCreator = AgenticServices.sequenceBuilder()
 
 ## Observability
 
-Tracking and logging the agents' invocations can be crucial for debugging and understanding the aggregate behavior of the whole agentic system in which those agents participate. For this reason, the `langchain4j-agentic` module allows to register an `AgentListener` through the `listener` method of the agent builders, that is notified of all agents invocations and their results, and it is defined as follows:
+Tracking and logging the agents' invocations can be crucial for debugging and understanding the aggregate behavior of the whole agentic system in which those agents participate. For this reason, the `langchain4j-agentic` module allows you to register an `AgentListener` through the `listener` method of the agent builders, that is notified of all agents invocations and their results, and it is defined as follows:
 
 ```java
 public interface AgentListener {
@@ -774,7 +774,7 @@ public interface AgentListener {
 }
 ```
 
-Note that all methods of this interface have a default empty implementation, so that it is possible to implement only the methods of interest. This will also allow to add new methods in future releases without breaking existing implementations.
+Note that all methods of this interface have a default empty implementation, so that it is possible to implement only the methods of interest. This will also allow you to add new methods in future releases without breaking existing implementations.
 
 For instance the following configuration of the `CreativeWriter` agent will log to the console when it is invoked and what is the story it generated.
 
@@ -878,7 +878,7 @@ so it will reveal the nested sequence of agents invocations necessary to generat
 
 ```
 AgentInvocation{agent=Sequential, startTime=2026-03-18T17:27:28.099439515, finishTime=2026-03-18T17:27:38.683498783, duration=10584 ms, tokens=0, inputs={topic=dragons and wiz..., style=comedy}, output=In a realm wher...}
-|=> AgentInvocation{agent=generateStory, startTime=2026-03-18T17:27:28.1.11.8287, finishTime=2026-03-18T17:27:31.033561726, duration=2932 ms, tokens=127, inputs={topic=dragons and wiz...}, output=In a realm wher...}
+|=> AgentInvocation{agent=generateStory, startTime=2026-03-18T17:27:28.1.17.2287, finishTime=2026-03-18T17:27:31.033561726, duration=2932 ms, tokens=127, inputs={topic=dragons and wiz...}, output=In a realm wher...}
 |=> AgentInvocation{agent=reviewLoop, startTime=2026-03-18T17:27:31.035952285, finishTime=2026-03-18T17:27:38.683438433, duration=7647 ms, tokens=0, inputs={score=0.8, topic=dragons and wiz..., style=comedy, story=In a realm wher...}, output=null}
     |=> AgentInvocation{agent=scoreStyle, iteration=0, startTime=2026-03-18T17:27:31.036155107, finishTime=2026-03-18T17:27:31.671478699, duration=635 ms, tokens=152, inputs={style=comedy, story=In a realm wher...}, output=0.2}
     |=> AgentInvocation{agent=editStory, iteration=0, startTime=2026-03-18T17:27:31.671711250, finishTime=2026-03-18T17:27:38.182881941, duration=6511 ms, tokens=491, inputs={style=comedy, story=In a realm wher...}, output=In a realm wher...}
@@ -908,6 +908,22 @@ HtmlReportGenerator.generateExecution(monitor, Path.of("execution.html"));
 ```
 
 This last method also supports filtering by memory id, for instance `HtmlReportGenerator.generateExecution(monitor, memoryId, path)`, while all methods have overloads that return the HTML as a `String` instead of writing to a file.
+
+By default, `AgentMonitor` retains up to 100 sessions (distinct memory IDs) per outcome (successful and failed, independently). When the limit is exceeded, the oldest sessions are evicted automatically. This makes it safe to attach a monitor to a long-lived singleton agent without risking unbounded memory growth.
+
+The retention limit can be changed at any time via `setMaxRetainedSessions`. If the new limit is lower than the current number of retained sessions, excess entries are evicted immediately:
+
+```java
+monitor.setMaxRetainedSessions(20);
+```
+
+Setting it to `0` disables retention entirely — listener callbacks still fire, but nothing is kept in memory. To explicitly remove all retained sessions, use the `clear()` method:
+
+```java
+monitor.clear();
+```
+
+Both operations leave ongoing (in-flight) executions unaffected.
 
 Another alternative to manually creating an `AgentMonitor` and registering it as a listener, is making your agent service interface to extend the `MonitoredAgent` one. When doing so, the builder automatically creates and registers an `AgentMonitor` as a listener, and this monitor becomes accessible directly from the agent instance via the `agentMonitor()` method.
 
@@ -1011,7 +1027,9 @@ In a very similar way, annotating other `static` methods in the agent interface,
 | `@AgentListenerSupplier`      | Returns the `AgentListener` to be used by this agent.                                                                                                         |
 | `@RetrievalAugmentorSupplier` | Returns the `RetrievalAugmentor` to be used by this agent.                                                                                                    |
 | `@ToolsSupplier`              | Returns the tool or set of tools to be used by this agent.<br/> It can return either a single `Object` or a `Object[]`                                        |
-| `@ToolProviderSupplier`       | Returns the `ToolProvider` to be used by this agent.                                                                                                          |
+| `@ToolProviderSupplier`          | Returns the `ToolProvider` to be used by this agent.                                                                                                          |
+| `@SystemMessageProviderSupplier` | Provides a dynamic system message. The method receives the memoryId as an `Object` and returns a `String`.                                                    |
+| `@UserMessageProviderSupplier`   | Provides a dynamic user message. The method receives the memoryId as an `Object` and returns a `String`.                                                      |
 
 To give another example of this declarative API, let's redefine through it the `ExpertsAgent` demonstrated in the conditional workflow section.
 
@@ -1346,7 +1364,7 @@ AgentInvocation{agentName='withdraw', arguments={user=Mario, amount=115.0}}
 
 AgentInvocation{agentName='credit', arguments={user=Georgios, amount=115.0}}
 
-AgentInvocation{agentName='done', arguments={response=The transfer of 100 EUR from Mario's account to Georgios' account has been completed. Mario's balance is 885.0 USD, and Georgios' balance is 1.11.8 USD. The conversion rate was 1.15 EUR to USD.}}
+AgentInvocation{agentName='done', arguments={response=The transfer of 100 EUR from Mario's account to Georgios' account has been completed. Mario's balance is 885.0 USD, and Georgios' balance is 1.17.2 USD. The conversion rate was 1.15 EUR to USD.}}
 ```
 
 The last invocation is a special one that signals the supervisor believes the task has been completed, and returns as a response a summary of all the operations performed.
@@ -2400,7 +2418,7 @@ public record HumanInTheLoop(Function<AgenticScope, ?> responseProvider) {
 
 This quite naive, but also very generic, implementation is based on the use of a single function that takes the current `AgenticScope` as input, from which it will be possible to extract the context to ask an appropriate question, and returns the response that should be provided to the user.
 
-The `HumanInTheLoop` agent provided out-of-the-box by the `langchain4j-agentic` module allows to define this function together with the agent description, and the output variable where the user's response will be written.
+The `HumanInTheLoop` agent provided out-of-the-box by the `langchain4j-agentic` module allows you to define this function together with the agent description, and the output variable where the user's response will be written.
 
 For instance, having defined an `AstrologyAgent` like:
 
@@ -2673,6 +2691,138 @@ scope.completePendingResponse("manager-approval", "APPROVED by manager");
 
 This unblocks the waiting thread and the workflow continues to the shipping step without any restart.
 
+## Agents Registry
+
+The `langchain4j-agentic` module provides an SPI (Service Provider Interface) for an `AgentsRegistry`, allowing external providers to register agents that can be discovered by name and wired into any agentic pattern. This is especially useful for integrating agents provided by external systems, such as remote A2A protocol agents, into locally defined agentic workflows.
+
+The `AgentsRegistry` interface defines two methods for discovering agents:
+
+```java
+public interface AgentsRegistry {
+
+    Map<String, AgentInstance> allAgents();
+
+    AgentInstance getAgent(String name);
+
+    static AgentsRegistry get() { ... }
+}
+```
+
+- `allAgents()` returns a map of all registered agents keyed by their name.
+- `getAgent(String name)` returns the agent with the given name, throwing a `RuntimeException` if not found.
+
+The static `get()` method uses Java's `ServiceLoader` to discover registry implementations. Multiple providers are supported and automatically merged into a single composite registry; duplicate agent names across providers cause an exception at discovery time. If no provider is found, an empty registry is returned that throws on any lookup.
+
+To provide a registry implementation, create a class that implements the `AgentsRegistry` interface and register it via the standard Java SPI mechanism by creating a file `META-INF/services/dev.langchain4j.agentic.planner.AgentsRegistry` containing the fully qualified name of your implementation class.
+
+```java
+public class MyAgentsRegistry implements AgentsRegistry {
+
+    private final Map<String, AgentInstance> agents;
+
+    public MyAgentsRegistry() {
+        AgentInstance audienceEditor = (AgentInstance) AgenticServices
+                .agentBuilder(AudienceEditor.class)
+                .chatModel(myModel())
+                .outputKey("story")
+                .build();
+
+        AgentInstance styleEditor = (AgentInstance) AgenticServices
+                .agentBuilder(StyleEditor.class)
+                .chatModel(myModel())
+                .outputKey("story")
+                .build();
+
+        this.agents = Map.of(
+                "audienceEditor", audienceEditor,
+                "styleEditor", styleEditor);
+    }
+
+    @Override
+    public Map<String, AgentInstance> allAgents() {
+        return agents;
+    }
+
+    @Override
+    public AgentInstance getAgent(String name) {
+        AgentInstance agent = agents.get(name);
+        if (agent == null) {
+            throw new RuntimeException("No agent found with name: " + name);
+        }
+        return agent;
+    }
+}
+```
+
+The agents returned by the registry are standard `AgentInstance` objects, typically built using `AgenticServices.agentBuilder()`, so they are ready to be used as subagents in any agentic pattern.
+
+Once a registry is available via SPI, agents can be loaded and mixed with locally defined agents in any agentic pattern:
+
+```java
+AgentsRegistry registry = AgentsRegistry.get();
+
+CreativeWriter creativeWriter = AgenticServices
+        .agentBuilder(CreativeWriter.class)
+        .chatModel(BASE_MODEL)
+        .outputKey("story")
+        .build();
+
+AgentInstance audienceEditor = registry.getAgent("audienceEditor");
+AgentInstance styleEditor = registry.getAgent("styleEditor");
+
+UntypedAgent novelCreator = AgenticServices.sequenceBuilder()
+        .subAgents(creativeWriter, audienceEditor, styleEditor)
+        .outputKey("story")
+        .build();
+
+String story = (String) novelCreator.invoke(Map.of(
+        "topic", "dragons and wizards",
+        "style", "fantasy",
+        "audience", "young adults"));
+```
+
+Here the `CreativeWriter` is built locally while the `AudienceEditor` and `StyleEditor` are loaded from the registry by name and used as subagents alongside locally defined ones.
+
+The `@RegistryAgent` annotation allows loading agents from the registry in the declarative API. To use it, define a simple interface with a method annotated with `@RegistryAgent`, specifying the name of the agent in the registry:
+
+```java
+public interface AudienceEditorFromRegistry {
+    @RegistryAgent("audienceEditor")
+    String editStory(@V("story") String story, @V("audience") String audience);
+}
+
+public interface StyleEditorFromRegistry {
+    @RegistryAgent("styleEditor")
+    String editStory(@V("story") String story, @V("style") String style);
+}
+```
+
+These interfaces can then be used as subagents in a fully declarative agentic system definition:
+
+```java
+public interface DeclarativeStoryCreator {
+
+    @SequenceAgent(outputKey = "story",
+            subAgents = {CreativeWriter.class, AudienceEditorFromRegistry.class, StyleEditorFromRegistry.class})
+    String write(@V("topic") String topic, @V("style") String style, @V("audience") String audience);
+
+    @ChatModelSupplier
+    static ChatModel chatModel() {
+        return BASE_MODEL;
+    }
+}
+```
+
+and instantiated as usual with `AgenticServices.createAgenticSystem()`:
+
+```java
+DeclarativeStoryCreator storyCreator = AgenticServices.createAgenticSystem(DeclarativeStoryCreator.class);
+
+String story = storyCreator.write("dragons and wizards", "fantasy", "young adults");
+```
+
+When the declarative system encounters a `@RegistryAgent` annotation, it automatically loads the corresponding agent from the registry by name and wires it into the agentic system. This allows mixing locally defined agents (like `CreativeWriter` with its `@ChatModelSupplier`) and registry-provided agents in the same declarative workflow.
+
 ## A2A Integration
 
 The additional `langchain4j-agentic-a2a` module provides a seamless integration with the [A2A](https://a2aprotocol.ai/) protocol, allowing to build agentic systems that can use remote A2A server agents and eventually mixing them with other locally defined agents.
@@ -2785,6 +2935,39 @@ ResultWithAgenticScope<String> result = workflow.converse("hello");
 ```
 
 In this sequence, the first agent sends a message with no `contextId`/`taskId` (they are `null` in the scope). The server creates a new task and context. The response IDs are written to the scope. When the second agent runs, it reads the now-populated `contextId` and `taskId` from the scope and sends them on the message envelope, continuing the same conversation.
+
+### Customizing the A2A client
+
+By default, A2A agents use a JSONRPC transport with a default configuration. The `clientCustomizer` method exposes the underlying a2a-java SDK `ClientBuilder`, allowing you to configure a different transport, set a custom HTTP client, add interceptors, or change any other client setting.
+
+When building an A2A agent programmatically, pass a `Consumer<ClientBuilder>` to `clientCustomizer`:
+
+```java
+UntypedAgent creativeWriter = AgenticServices
+        .a2aBuilder(A2A_SERVER_URL)
+        .clientCustomizer((ClientBuilder cb) ->
+                cb.withTransport(JSONRPCTransport.class, new JSONRPCTransportConfigBuilder()))
+        .inputKeys("topic")
+        .outputKey("story")
+        .build();
+```
+
+When a customizer is provided, it replaces the default transport setup entirely, giving full control over how the `Client` is constructed.
+
+For declarative agents, annotate a static method with `@A2AClientCustomizer`. The method must take a single `ClientBuilder` parameter and return `void`:
+
+```java
+public interface DeclarativeA2AWithCustomizer {
+
+    @A2AClientAgent(a2aServerUrl = "http://localhost:8080", outputKey = "story")
+    String generateStory(@V("topic") String topic);
+
+    @A2AClientCustomizer
+    static void customizer(ClientBuilder cb) {
+        cb.withTransport(JSONRPCTransport.class, new JSONRPCTransportConfigBuilder());
+    }
+}
+```
 
 ## MCP-based Tool Agents
 
